@@ -36,14 +36,7 @@ async function launchAndGoToPage() {
         // await nextDayEl[0].click()
         await page.waitFor(1000)
 
-
-        // $x query using an xpath expression it returns an array of 'EventHandlers'
-        const linkHandlers = (await page.$x("//th[contains(text(), '11:15h a 12:00h')]"))[0];
-        const example_parent = (await linkHandlers.$x('..'))[0];
-        const allHourRows = await example_parent.$x('following-sibling::*');
-
-
-        const firstEval = await page.evaluate((sel) => {
+        await page.evaluate((sel) => {
             const arrayOfAllTableHeaders = Object.values(document.querySelectorAll(sel))
             const selectedTableHeader = arrayOfAllTableHeaders.filter(tableHeader => tableHeader.textContent.includes('20:15h'))[0]
             const selectedTableHeaderFirstRow = selectedTableHeader.parentElement
@@ -51,7 +44,6 @@ async function launchAndGoToPage() {
             const allTrSiblings = []
             const allTrCells = []
             while (node) {
-                console.log('HOLAAAAA')
                 if (node !== this && node.nodeType === Node.ELEMENT_NODE)
                 allTrSiblings.push(node);
                 node = node.nextElementSibling || node.nextSibling;
@@ -66,37 +58,11 @@ async function launchAndGoToPage() {
                 const a = span.children[0]
                 a.click();
                 setTimeout(() => {
-                    const modalFooter = document.querySelector('div.modal-footer').style.backgroundColor="red"
-                    document.querySelectorAll('a.boto.enviamentBtn')[0].click()
-                    return modalFooter;                   
-                }, 5000);
+                    document.querySelector('a.boto.enviamentBtn').click()           
+                }, 1000);
 
             }
         }, 'th[colspan="7"]')
-        console.log('first Evaluation', firstEval)
-        const secondEval = await page.evaluate((sel) => {
-            return document.querySelectorAll(sel).length
-        }, '#ferreserva_tancar_boto')
-        console.log('sECOND evaluation', secondEval)
-
-        
-
-        // for (let hourRow of allHourRows) {
-        //     const freeCellHoursInASingleRow = await hourRow.$$eval('td', allTableCell => allTableCell.map(async (tableCell) => {
-        //         if (tableCell.className === 'reservable') {
-        //             const span = tableCell.children[0]
-        //             const a = span.children[0];
-        //             a.click()
-        //             setTimeout(async () => {
-        //                 await page.$eval('a.boto.enviamentBtn', botoEnviament => botoEnviament.children[0].click())
-        //                 //alert()
-        //             }, 5000);
-        //         }
-
-        //     }));
-
-        // }
-
 
         // await page.screenshot({
         //     path: "./screenshot.jpg",
