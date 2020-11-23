@@ -43,7 +43,7 @@ async function launchAndGoToPage() {
         const allHourRows = await example_parent.$x('following-sibling::*');
 
 
-        const hehe = await page.evaluate((sel) => {
+        const firstEval = await page.evaluate((sel) => {
             const arrayOfAllTableHeaders = Object.values(document.querySelectorAll(sel))
             const selectedTableHeader = arrayOfAllTableHeaders.filter(tableHeader => tableHeader.textContent.includes('20:15h'))[0]
             const selectedTableHeaderFirstRow = selectedTableHeader.parentElement
@@ -65,21 +65,21 @@ async function launchAndGoToPage() {
                 const span = reservableHour.children[0]
                 const a = span.children[0]
                 a.click();
-            }
-            return allTrCells.filter(tableCell=> tableCell.className === 'reservable');
-            // var xpath = "th[contains(text(), '11:15h a 12:00h')]";
-            // var matchingElement = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-            // const node = matchingElement.parentElement
-            // const resultSiblings = []
-            // while ( node ) {
-            //     if ( node !== this && node.nodeType === Node.ELEMENT_NODE ) 
-            //     resultSiblings.push( node );
-            //     node = node.nextElementSibling || node.nextSibling;
-            // }
-            // return resultSiblings;
-        }, 'th[colspan="7"]')
+                setTimeout(() => {
+                    const modalFooter = document.querySelector('div.modal-footer').style.backgroundColor="red"
+                    document.querySelectorAll('a.boto.enviamentBtn')[0].click()
+                    return modalFooter;                   
+                }, 5000);
 
-        console.log('HEHE', hehe)
+            }
+        }, 'th[colspan="7"]')
+        console.log('first Evaluation', firstEval)
+        const secondEval = await page.evaluate((sel) => {
+            return document.querySelectorAll(sel).length
+        }, '#ferreserva_tancar_boto')
+        console.log('sECOND evaluation', secondEval)
+
+        
 
         // for (let hourRow of allHourRows) {
         //     const freeCellHoursInASingleRow = await hourRow.$$eval('td', allTableCell => allTableCell.map(async (tableCell) => {
