@@ -136,19 +136,32 @@ async function launchAndGoToPage() {
                 if (selectedHours.length > 1) {
                     // Table Header has to be found by his content. Ex => '20:15h a 21:00h'
                     const [tableHeader, tableHeader2] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
-                    console.log('tableHeader', tableHeader)
-                    console.log('tableHeader2', tableHeader2)
                     // We Navigate throw DOM tree getting parent element of th=> tr ,then all his siblings and then we filter all the sibling children that are table cells to find the ones that has 'reservable' className on it
                     const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
-                    reserveHour(firstReservableHour)
+                    if(firstReservableHour){
+                        reserveHour(firstReservableHour)
+                    }else{
+                        console.log('There is not available hour to book at ', selectedHours[0])
+                    }
+                    
                     setTimeout(async () => {
                         const secondReservableHour = await getFirstReservableHourOfATable(tableHeader2);
+                        if(secondReservableHour){
+                            reserveHour(secondReservableHour)
+                        }else{
+                            console.log('There is not available hour to book at ', selectedHours[1])
+                        }
                         reserveHour(secondReservableHour)
                     }, 10000);
+
                 } else {
                     const [tableHeader] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
                     const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
-                    reserveHour(firstReservableHour)
+                    if(firstReservableHour){
+                        reserveHour(firstReservableHour)
+                    }else{
+                        console.log('There is not available hour to book at ', selectedHours[0])
+                    }
                 }
 
 
