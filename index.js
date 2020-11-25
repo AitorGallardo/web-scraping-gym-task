@@ -7,8 +7,13 @@ const url = 'https://canxaubet.poliwincloud.com/es';
 
 async function launchAndGoToPage() {
     try {
-        let browser = null;
-        let page = null;
+
+        await navigateToPage()
+        await navigateToLastPage()
+        //await bookHours()
+
+        var browser = null;
+        var page = null;
         async function navigateToPage() {
             browser = await puppeteer.launch({ headless: false }); // args needed to run properly on heroku { args: ['--no-sandbox'] }
             page = await browser.newPage();
@@ -19,16 +24,13 @@ async function launchAndGoToPage() {
         async function navigateToLastPage() {
             try {
                 await login()
-                await page.waitFor(1000)
-
-                await firstStep()
-                await page.waitFor(1000)
-                await secondStep()
-                await page.waitFor(1000)
+                
+                await firstStep()               
+                await secondStep()               
                 await thirdStep()
                 await page.waitFor(1000)
                 await fourthStep()
-                await page.waitFor(1000)
+                
 
                 async function login() {
                     const maxTries = 5;
@@ -49,6 +51,7 @@ async function launchAndGoToPage() {
                     for (let tries = 0; tries < maxTries; tries++)
                         try {
                             const goToReserveButtonXpath = '/html/body/div[3]/div/div/div/div[2]/div[3]/div[1]/div[4]/a';
+                            await page.waitForXPath(goToReserveButtonXpath)
                             const reserveEl = await page.$x(goToReserveButtonXpath)
                             await reserveEl[0].click()
                             break;
@@ -63,6 +66,7 @@ async function launchAndGoToPage() {
                     for (let tries = 0; tries < maxTries; tries++)
                         try {
                             const openFitnessCollapsableButtonXpath = '/html/body/div[3]/div/div/div/div[2]/div[1]/div[3]/div/a'
+                            await page.waitForXPath(openFitnessCollapsableButtonXpath)
                             const fitnessCollapsableEl = await page.$x(openFitnessCollapsableButtonXpath)
                             await fitnessCollapsableEl[0].click()
                             break;
@@ -76,8 +80,9 @@ async function launchAndGoToPage() {
                     const maxTries = 5;
                     for (let tries = 0; tries < maxTries; tries++)
                         try {
-                            const goToFitnessHallButtonXpath = '/html/body/div[3]/div/div/div/div[2]/div[1]/div[4]/div/a'
-                            const fitnessEl = await page.$x(goToFitnessHallButtonXpath)
+                            const goToFitnessHallHyperLinkXpath = '/html/body/div[3]/div/div/div/div[2]/div[1]/div[4]/div/a'
+                            await page.waitFor(1000)
+                            const fitnessEl = await page.$x(goToFitnessHallHyperLinkXpath)
                             await fitnessEl[0].click()
                             break;
                         } catch (err) {
@@ -91,6 +96,7 @@ async function launchAndGoToPage() {
                     for (let tries = 0; tries < maxTries; tries++)
                         try {
                             const goToNextDayButtonXpath = '/html/body/div[3]/div/div/div/div[3]/div[2]/div[3]/div[3]/a'
+                            await page.waitForXPath(goToNextDayButtonXpath)
                             const nextDayEl = await page.$x(goToNextDayButtonXpath)
                             await nextDayEl[0].click()
                             break;
@@ -224,11 +230,6 @@ async function launchAndGoToPage() {
 
             }, tableHeaderSelector, selectedHours)
         }
-
-        await navigateToPage()
-        await navigateToLastPage()
-        await bookHours()
-
     } catch (err) {
         console.log(err)
     }
