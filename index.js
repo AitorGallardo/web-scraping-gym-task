@@ -4,13 +4,14 @@ const puppeteer = require('puppeteer');
 require('dotenv').config();
 
 const sendEmail = require('./mailSender.js')
-const argv = require('./cli-args.js')
+const CLI_ARGS = require('./cli-args.js')
 
 const url = 'https://canxaubet.poliwincloud.com/es';
 
 async function launchAndGoToPage() {
     try {
-        argv.checkArgs()
+        console.log('CLI_ARGS', CLI_ARGS)
+        CLI_ARGS.checkArgs()
         await navigateToPage()
         await navigateToLastPage()
         var mailMessage = await bookHours()
@@ -37,8 +38,7 @@ async function launchAndGoToPage() {
                 await firstStep()
                 await secondStep()
                 await thirdStep()
-
-                //await fourthStep()
+                if(CLI_ARGS.nextDay) await fourthStep()
 
 
                 async function login() {
@@ -160,15 +160,17 @@ async function launchAndGoToPage() {
                 19: '19:15h a 20:00h',
                 20: '20:15h a 21:00h'
             };
+            const firstHourToBook = allAvailableHours[CLI_ARGS.firstHour];
+            const secondHourToBook = allAvailableHours[CLI_ARGS.secondHour];
 
-            const selectedHours = [allAvailableHours[10], allAvailableHours[11]]
+            const selectedHours = [firstHourToBook, secondHourToBook]
             await page.waitForSelector(tableHeaderSelector)
             return await page.evaluate(async (selector, selectedHours) => {
                 try {
                     const arrayOfAllTableHeaders = Object.values(document.querySelectorAll(selector))
                     const notPosibleToBookHours = []
                     if (selectedHours.length > 1) {
-                        // Table Header has to be found by his content. Ex => '20:15h a 21:00h'
+                        // Table Header has to be found by his content. Ex: => '20:15h a 21:00h'
                         const [tableHeader, tableHeader2] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
                         // We Navigate throw DOM tree getting parent element of th=> tr ,then all his siblings and then we filter all the sibling children that are table cells to find the ones that has 'reservable' className on it
                         const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
@@ -249,8 +251,7 @@ async function launchAndGoToPage() {
         mailMessage = errorMessage;
 
     } finally {
-        console.log('mailmessage', mailMessage)
-        sendEmail({ message_payload: mailMessage })
+        if(CLI_ARGS.mail) await sendEmail({ message_payload: mailMessage })
         browser ? await browser.close() : process.exit();
     }
 }
