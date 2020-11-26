@@ -1,4 +1,16 @@
 const puppeteer = require('puppeteer');
+const argv = require('yargs/yargs')(process.argv.slice(2))
+    .default({
+        nextDay: true,
+        mail: true,
+        hour1: 10,
+        hour2: 11
+    }).alias({
+        n: 'nextDay',
+        m: 'mail',
+        h1: 'hour1',
+        h2: 'hour2'
+    }).argv
 
 require('dotenv').config();
 
@@ -6,23 +18,48 @@ const sendEmail = require('./mailSender.js')
 
 const url = 'https://canxaubet.poliwincloud.com/es';
 
+function isValidArg(arg) {
+    switch (arg) {
+        case ('n' || 'nextDay'):
+            if (typeof argv.nextDay === 'boolean') return argv.nextDay;
+            if (typeof argv.nextDay === 'string' && (argv.nextDay === 'true' || argv.nextDay === 'false')) return JSON.parse(argv.nextDay);
+            else throw Error('Invalid --nextDay argument');
+        case ('m' || 'mail'):
+            if (typeof argv.mail === 'boolean') return argv.mail;
+            if (typeof argv.mail === 'string' && (argv.mail === 'true' || argv.mail === 'false')) return JSON.parse(argv.mail);
+            else throw Error('Invalid --mail argument');
+        case ('h1' || 'hour1'):
+            if (typeof argv.hour1 === 'number' && (arg.hour1 >=7 && arg.hour1 <=20)) return argv.hour1;
+            else throw Error('Invalid --hour1 argument');
+        case ('h2' || 'hour2'):
+            if (typeof argv.hour2 === 'number' && (arg.hour2 >=7 && arg.hour2 <=20)) return argv.hour2;
+            else throw Error('Invalid --hour2 argument');
+    }
+}
+
+function checkCLIArgs() {
+    for (const argument in argv) {
+        argv[argument] = isValidArg(argument);
+    }
+}
+
 async function launchAndGoToPage() {
     try {
-
+        checkCLIArgs()
         await navigateToPage()
         await navigateToLastPage()
         var mailMessage = await bookHours()
-        
+
         var browser = null;
         var page = null;
         async function navigateToPage() {
-            try{
+            try {
                 browser = await puppeteer.launch({ headless: false }); // args needed to run properly on heroku { args: ['--no-sandbox'] }
                 page = await browser.newPage();
                 const mozzilla_windows_userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0';
                 await page.setUserAgent(mozzilla_windows_userAgent);
                 await page.goto(url);
-            }catch(err){
+            } catch (err) {
                 const errorMessage = `NavigateToLastPageFUNCTION_ERROR...>${err}`
                 console.log(errorMessage)
                 throw errorMessage;
@@ -31,12 +68,13 @@ async function launchAndGoToPage() {
         async function navigateToLastPage() {
             try {
                 await login()
-                
-                await firstStep()               
-                await secondStep()               
+
+                await firstStep()
+                await secondStep()
                 await thirdStep()
-                //const fourthStepRes = await fourthStep()
-                
+
+                //await fourthStep()
+
 
                 async function login() {
                     const maxTries = 5;
@@ -48,8 +86,8 @@ async function launchAndGoToPage() {
                             return;
                         } catch (err) {
                             console.log(`loginERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1){
-                                const errorMessage = `loginERROR..MAX_TRIES_REACHED..skyping_function=> ${err}` 
+                            if (tries === maxTries - 1) {
+                                const errorMessage = `loginERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
                                 console.log(errorMessage)
                                 throw errorMessage;
                             }
@@ -66,7 +104,7 @@ async function launchAndGoToPage() {
                             return;
                         } catch (err) {
                             console.log(`firstStepERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1){
+                            if (tries === maxTries - 1) {
 
                                 const errorMessage = `firstStepERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
                                 console.log(errorMessage)
@@ -85,11 +123,11 @@ async function launchAndGoToPage() {
                             return;
                         } catch (err) {
                             console.log(`secondStepERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1){
+                            if (tries === maxTries - 1) {
 
                                 const errorMessage = `secondStepERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
-                                    console.log(errorMessage)
-                                    throw errorMessage;
+                                console.log(errorMessage)
+                                throw errorMessage;
                             }
                         }
                 }
@@ -104,7 +142,7 @@ async function launchAndGoToPage() {
                             return;
                         } catch (err) {
                             console.log(`thirdStepERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1){
+                            if (tries === maxTries - 1) {
                                 const errorMessage = `thirdStepERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
                                 console.log(errorMessage)
                                 throw errorMessage;
@@ -123,8 +161,8 @@ async function launchAndGoToPage() {
                             return;
                         } catch (err) {
                             console.log(`fourthStepStepERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1){
-                                const errorMessage=`fourthStepStepERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
+                            if (tries === maxTries - 1) {
+                                const errorMessage = `fourthStepStepERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
                                 console.log(errorMessage)
                                 return errorMessage;
                             }
@@ -160,8 +198,8 @@ async function launchAndGoToPage() {
 
             const selectedHours = [allAvailableHours[10], allAvailableHours[11]]
             await page.waitForSelector(tableHeaderSelector)
-            return await page.evaluate(async(selector, selectedHours)=>{
-                try{
+            return await page.evaluate(async (selector, selectedHours) => {
+                try {
                     const arrayOfAllTableHeaders = Object.values(document.querySelectorAll(selector))
                     const notPosibleToBookHours = []
                     if (selectedHours.length > 1) {
@@ -169,20 +207,20 @@ async function launchAndGoToPage() {
                         const [tableHeader, tableHeader2] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
                         // We Navigate throw DOM tree getting parent element of th=> tr ,then all his siblings and then we filter all the sibling children that are table cells to find the ones that has 'reservable' className on it
                         const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
-                        if(firstReservableHour){
+                        if (firstReservableHour) {
                             reserveHour(firstReservableHour)
-                        }else{
-                            const errorMessage = 'There is not available hour to book at '+selectedHours[0]
+                        } else {
+                            const errorMessage = 'There is not available hour to book at ' + selectedHours[0]
                             notPosibleToBookHours.push(errorMessage)
                         }
-                        const secondReservePromise = new Promise((resolve,reject)=>{
+                        const secondReservePromise = new Promise((resolve, reject) => {
                             setTimeout(async () => {
                                 const secondReservableHour = await getFirstReservableHourOfATable(tableHeader2);
-                                if(secondReservableHour){
+                                if (secondReservableHour) {
                                     reserveHour(secondReservableHour)
                                     resolve(notPosibleToBookHours)
-                                }else{
-                                    const errorMessage = 'There is not available hour to book at '+selectedHours[1]
+                                } else {
+                                    const errorMessage = 'There is not available hour to book at ' + selectedHours[1]
                                     notPosibleToBookHours.push(errorMessage)
                                     reject(notPosibleToBookHours)
                                 }
@@ -193,10 +231,10 @@ async function launchAndGoToPage() {
                     } else {
                         const [tableHeader] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
                         const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
-                        if(firstReservableHour){
+                        if (firstReservableHour) {
                             reserveHour(firstReservableHour)
-                        }else{
-                            const errorMessage = 'There is not available hour to book at '+selectedHours[0]
+                        } else {
+                            const errorMessage = 'There is not available hour to book at ' + selectedHours[0]
                             notPosibleToBookHours.push(errorMessage)
                         }
                         return notPosibleToBookHours;
@@ -205,7 +243,7 @@ async function launchAndGoToPage() {
                     async function getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHourInterval) {
                         return arrayOfAllTableHeaders.filter(tableHeader => tableHeader.textContent.includes(selectedHourInterval[0]) || tableHeader.textContent.includes(selectedHourInterval[1]))
                     }
-    
+
                     async function getFirstReservableHourOfATable(selectedTableHeader) {
                         const selectedTableHeaderFirstRow = selectedTableHeader.parentElement
                         let node = selectedTableHeaderFirstRow;
@@ -221,7 +259,7 @@ async function launchAndGoToPage() {
                         }
                         return allTd.filter(tableCell => tableCell.className === 'reservable')[0]
                     }
-    
+
                     function reserveHour(reservableHour) {
                         const span = reservableHour.children[0]
                         const a = span.children[0]
@@ -230,9 +268,9 @@ async function launchAndGoToPage() {
                             const bookButton = document.querySelector('a.boto.enviamentBtn')
                             bookButton.click()
                         }, 1000);
-    
+
                     }
-                }catch(err){
+                } catch (err) {
                     const errorMessage = `bookingFUNCTION_ERROR...>${err}`
                     console.log(errorMessage)
                     throw errorMessage;
@@ -245,9 +283,9 @@ async function launchAndGoToPage() {
         console.log(errorMessage)
         mailMessage = errorMessage;
 
-    }finally{
+    } finally {
         console.log('mailmessage', mailMessage)
-        sendEmail({message_payload: mailMessage})
+        sendEmail({ message_payload: mailMessage })
         browser ? await browser.close() : process.exit();
     }
 }
