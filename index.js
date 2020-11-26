@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 
 require('dotenv').config();
 
+const sendEmail = require('./mailSender.js')
 
 const url = 'https://canxaubet.poliwincloud.com/es';
 
@@ -10,16 +11,22 @@ async function launchAndGoToPage() {
 
         await navigateToPage()
         await navigateToLastPage()
-        //await bookHours()
-
+        var mailMessage = await bookHours()
+        
         var browser = null;
         var page = null;
         async function navigateToPage() {
-            browser = await puppeteer.launch({ headless: false }); // args needed to run properly on heroku { args: ['--no-sandbox'] }
-            page = await browser.newPage();
-            const mozzilla_windows_userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0';
-            await page.setUserAgent(mozzilla_windows_userAgent);
-            await page.goto(url);
+            try{
+                browser = await puppeteer.launch({ headless: false }); // args needed to run properly on heroku { args: ['--no-sandbox'] }
+                page = await browser.newPage();
+                const mozzilla_windows_userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0';
+                await page.setUserAgent(mozzilla_windows_userAgent);
+                await page.goto(url);
+            }catch(err){
+                const errorMessage = `NavigateToLastPageFUNCTION_ERROR...>${err}`
+                console.log(errorMessage)
+                throw errorMessage;
+            }
         }
         async function navigateToLastPage() {
             try {
@@ -28,8 +35,7 @@ async function launchAndGoToPage() {
                 await firstStep()               
                 await secondStep()               
                 await thirdStep()
-                await page.waitFor(1000)
-                await fourthStep()
+                //const fourthStepRes = await fourthStep()
                 
 
                 async function login() {
@@ -39,11 +45,14 @@ async function launchAndGoToPage() {
                             await page.type('[name = myusername]', process.env.USER);
                             await page.type('[name = mypassword]', process.env.PASSWORD);
                             await page.click('[type = submit]', { waitUntil: 'domcontentloaded' });
-                            break;
+                            return;
                         } catch (err) {
                             console.log(`loginERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1)
-                                console.log(`loginERROR..MAX_TRIES_REACHED..skyping_function=>`, err)
+                            if (tries === maxTries - 1){
+                                const errorMessage = `loginERROR..MAX_TRIES_REACHED..skyping_function=> ${err}` 
+                                console.log(errorMessage)
+                                throw errorMessage;
+                            }
                         }
                 }
                 async function firstStep() {
@@ -54,11 +63,15 @@ async function launchAndGoToPage() {
                             await page.waitForXPath(goToReserveButtonXpath)
                             const reserveEl = await page.$x(goToReserveButtonXpath)
                             await reserveEl[0].click()
-                            break;
+                            return;
                         } catch (err) {
                             console.log(`firstStepERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1)
-                                console.log(`firstStepERROR..MAX_TRIES_REACHED..skyping_function=>`, err)
+                            if (tries === maxTries - 1){
+
+                                const errorMessage = `firstStepERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
+                                console.log(errorMessage)
+                                throw errorMessage;
+                            }
                         }
                 }
                 async function secondStep() {
@@ -69,11 +82,15 @@ async function launchAndGoToPage() {
                             await page.waitForXPath(openFitnessCollapsableButtonXpath)
                             const fitnessCollapsableEl = await page.$x(openFitnessCollapsableButtonXpath)
                             await fitnessCollapsableEl[0].click()
-                            break;
+                            return;
                         } catch (err) {
                             console.log(`secondStepERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1)
-                                console.log(`secondStepERROR..MAX_TRIES_REACHED..skyping_function=>`, err)
+                            if (tries === maxTries - 1){
+
+                                const errorMessage = `secondStepERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
+                                    console.log(errorMessage)
+                                    throw errorMessage;
+                            }
                         }
                 }
                 async function thirdStep() {
@@ -84,11 +101,15 @@ async function launchAndGoToPage() {
                             await page.waitFor(1000)
                             const fitnessEl = await page.$x(goToFitnessHallHyperLinkXpath)
                             await fitnessEl[0].click()
-                            break;
+                            return;
                         } catch (err) {
                             console.log(`thirdStepERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1)
-                                console.log(`thirdStepERROR..MAX_TRIES_REACHED..skyping_function=>`, err)
+                            if (tries === maxTries - 1){
+                                const errorMessage = `thirdStepERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
+                                console.log(errorMessage)
+                                throw errorMessage;
+                            }
+
                         }
                 }
                 async function fourthStep() {
@@ -99,16 +120,21 @@ async function launchAndGoToPage() {
                             await page.waitForXPath(goToNextDayButtonXpath)
                             const nextDayEl = await page.$x(goToNextDayButtonXpath)
                             await nextDayEl[0].click()
-                            break;
+                            return;
                         } catch (err) {
                             console.log(`fourthStepStepERROR..Try_n: ${tries}..retrying_function=>`, err)
-                            if (tries === maxTries - 1)
-                                console.log(`fourthStepStepERROR..MAX_TRIES_REACHED..skyping_function=>`, err)
+                            if (tries === maxTries - 1){
+                                const errorMessage=`fourthStepStepERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
+                                console.log(errorMessage)
+                                return errorMessage;
+                            }
                         }
                 }
 
             } catch (err) {
-                console.log(`navigateToLasPageERROR..Try_n: ${tries}..retrying_function=>`, err)
+                const errorMessage = `NavigateToLastPageFUNCTION_ERROR...>${err}`
+                console.log(errorMessage)
+                throw errorMessage;
             }
 
         }
@@ -133,107 +159,97 @@ async function launchAndGoToPage() {
             };
 
             const selectedHours = [allAvailableHours[10], allAvailableHours[11]]
-
-
-
-            await page.evaluate(async (selector, selectedHours) => {
-                const arrayOfAllTableHeaders = Object.values(document.querySelectorAll(selector))
-                var closeButtonModal = null;
-                if (selectedHours.length > 1) {
-                    // Table Header has to be found by his content. Ex => '20:15h a 21:00h'
-                    const [tableHeader, tableHeader2] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
-                    // We Navigate throw DOM tree getting parent element of th=> tr ,then all his siblings and then we filter all the sibling children that are table cells to find the ones that has 'reservable' className on it
-                    const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
-                    if(firstReservableHour){
-                        reserveHour(firstReservableHour)
-                    }else{
-                        console.log('There is not available hour to book at ', selectedHours[0])
-                    }
-                    
-                    setTimeout(async () => {
-                        const secondReservableHour = await getFirstReservableHourOfATable(tableHeader2);
-                        if(secondReservableHour){
-                            reserveHour(secondReservableHour)
+            await page.waitForSelector(tableHeaderSelector)
+            return await page.evaluate(async(selector, selectedHours)=>{
+                try{
+                    const arrayOfAllTableHeaders = Object.values(document.querySelectorAll(selector))
+                    const notPosibleToBookHours = []
+                    if (selectedHours.length > 1) {
+                        // Table Header has to be found by his content. Ex => '20:15h a 21:00h'
+                        const [tableHeader, tableHeader2] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
+                        // We Navigate throw DOM tree getting parent element of th=> tr ,then all his siblings and then we filter all the sibling children that are table cells to find the ones that has 'reservable' className on it
+                        const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
+                        if(firstReservableHour){
+                            reserveHour(firstReservableHour)
                         }else{
-                            console.log('There is not available hour to book at ', selectedHours[1])
+                            const errorMessage = 'There is not available hour to book at '+selectedHours[0]
+                            notPosibleToBookHours.push(errorMessage)
                         }
-                        reserveHour(secondReservableHour)
-                    }, 10000);
-
-                } else {
-                    const [tableHeader] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
-                    const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
-                    if(firstReservableHour){
-                        reserveHour(firstReservableHour)
-                    }else{
-                        console.log('There is not available hour to book at ', selectedHours[0])
-                    }
-                }
-
-
-                async function getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHourInterval) {
-                    return arrayOfAllTableHeaders.filter(tableHeader => tableHeader.textContent.includes(selectedHourInterval[0]) || tableHeader.textContent.includes(selectedHourInterval[1]))
-                }
-
-                async function getFirstReservableHourOfATable(selectedTableHeader) {
-                    const selectedTableHeaderFirstRow = selectedTableHeader.parentElement
-                    let node = selectedTableHeaderFirstRow;
-                    const allTrSiblings = []
-                    const allTd = []
-                    while (node) {
-                        if (node !== this && node.nodeType === Node.ELEMENT_NODE)
-                            allTrSiblings.push(node);
-                        node = node.nextElementSibling || node.nextSibling;
-                    }
-                    for (let tr of allTrSiblings) {
-                        allTd.push(...tr.children)
-                    }
-                    return allTd.filter(tableCell => tableCell.className === 'reservable')[0]
-                }
-
-                function reserveHour(reservableHour) {
-                    const span = reservableHour.children[0]
-                    const a = span.children[0]
-                    a.click();
-                    setTimeout(() => {
-                        const bookButton = document.querySelector('a.boto.enviamentBtn')
-                        bookButton.click()
-                        closeButtonModal = document.querySelector('#Tancar')
-                        //closePopUP()
-                    }, 1000);
-
-                }
-
-                function closePopUP() {
-                    let dataTable = document.querySelector('#dades-reserva') //Showed in the first part of the booking pop up process, when it disappears its time to close the pop-up
-                    console.log('WHAT HAPPENS',dataTable)
-                    if (dataTable) {
-                        setTimeout(closePopUP, 3000);
+                        const secondReservePromise = new Promise((resolve,reject)=>{
+                            setTimeout(async () => {
+                                const secondReservableHour = await getFirstReservableHourOfATable(tableHeader2);
+                                if(secondReservableHour){
+                                    reserveHour(secondReservableHour)
+                                    resolve(notPosibleToBookHours)
+                                }else{
+                                    const errorMessage = 'There is not available hour to book at '+selectedHours[1]
+                                    notPosibleToBookHours.push(errorMessage)
+                                    reject(notPosibleToBookHours)
+                                }
+                            }, 10000);
+                        })
+                        const secondReserveRes = await secondReservePromise;
+                        return secondReserveRes;
                     } else {
-                        // There is a delay doing the booking while we cannot click close, thats why multiple click are recreated
-                        let clicked = false;
-
-                        function endClickListener(event) {
-                            clicked = true
-                            closeButtonModal.removeEventListener('click', endClickListener);
+                        const [tableHeader] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
+                        const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
+                        if(firstReservableHour){
+                            reserveHour(firstReservableHour)
+                        }else{
+                            const errorMessage = 'There is not available hour to book at '+selectedHours[0]
+                            notPosibleToBookHours.push(errorMessage)
                         }
-                        closeButtonModal.addEventListener("click", endClickListener)
-                        while (clicked === false) {
-                            closeButtonModal.click()
-                        }
+                        return notPosibleToBookHours;
                     }
+
+                    async function getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHourInterval) {
+                        return arrayOfAllTableHeaders.filter(tableHeader => tableHeader.textContent.includes(selectedHourInterval[0]) || tableHeader.textContent.includes(selectedHourInterval[1]))
+                    }
+    
+                    async function getFirstReservableHourOfATable(selectedTableHeader) {
+                        const selectedTableHeaderFirstRow = selectedTableHeader.parentElement
+                        let node = selectedTableHeaderFirstRow;
+                        const allTrSiblings = []
+                        const allTd = []
+                        while (node) {
+                            if (node !== this && node.nodeType === Node.ELEMENT_NODE)
+                                allTrSiblings.push(node);
+                            node = node.nextElementSibling || node.nextSibling;
+                        }
+                        for (let tr of allTrSiblings) {
+                            allTd.push(...tr.children)
+                        }
+                        return allTd.filter(tableCell => tableCell.className === 'reservable')[0]
+                    }
+    
+                    function reserveHour(reservableHour) {
+                        const span = reservableHour.children[0]
+                        const a = span.children[0]
+                        a.click();
+                        setTimeout(() => {
+                            const bookButton = document.querySelector('a.boto.enviamentBtn')
+                            bookButton.click()
+                        }, 1000);
+    
+                    }
+                }catch(err){
+                    const errorMessage = `bookingFUNCTION_ERROR...>${err}`
+                    console.log(errorMessage)
+                    throw errorMessage;
                 }
-
-
-
-
 
             }, tableHeaderSelector, selectedHours)
         }
     } catch (err) {
-        console.log(err)
-    }
+        const errorMessage = `***ERROR*** ${err}`
+        console.log(errorMessage)
+        mailMessage = errorMessage;
 
+    }finally{
+        console.log('mailmessage', mailMessage)
+        sendEmail({message_payload: mailMessage})
+        browser ? await browser.close() : process.exit();
+    }
 }
 
 launchAndGoToPage()
