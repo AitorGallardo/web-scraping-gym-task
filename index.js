@@ -1,51 +1,16 @@
 const puppeteer = require('puppeteer');
-const argv = require('yargs/yargs')(process.argv.slice(2))
-    .default({
-        nextDay: true,
-        mail: true,
-        hour1: 10,
-        hour2: 11
-    }).alias({
-        n: 'nextDay',
-        m: 'mail',
-        h1: 'hour1',
-        h2: 'hour2'
-    }).argv
+
 
 require('dotenv').config();
 
 const sendEmail = require('./mailSender.js')
+const argv = require('./cli-args.js')
 
 const url = 'https://canxaubet.poliwincloud.com/es';
 
-function isValidArg(arg) {
-    switch (arg) {
-        case ('n' || 'nextDay'):
-            if (typeof argv.nextDay === 'boolean') return argv.nextDay;
-            if (typeof argv.nextDay === 'string' && (argv.nextDay === 'true' || argv.nextDay === 'false')) return JSON.parse(argv.nextDay);
-            else throw Error('Invalid --nextDay argument');
-        case ('m' || 'mail'):
-            if (typeof argv.mail === 'boolean') return argv.mail;
-            if (typeof argv.mail === 'string' && (argv.mail === 'true' || argv.mail === 'false')) return JSON.parse(argv.mail);
-            else throw Error('Invalid --mail argument');
-        case ('h1' || 'hour1'):
-            if (typeof argv.hour1 === 'number' && (arg.hour1 >=7 && arg.hour1 <=20)) return argv.hour1;
-            else throw Error('Invalid --hour1 argument');
-        case ('h2' || 'hour2'):
-            if (typeof argv.hour2 === 'number' && (arg.hour2 >=7 && arg.hour2 <=20)) return argv.hour2;
-            else throw Error('Invalid --hour2 argument');
-    }
-}
-
-function checkCLIArgs() {
-    for (const argument in argv) {
-        argv[argument] = isValidArg(argument);
-    }
-}
-
 async function launchAndGoToPage() {
     try {
-        checkCLIArgs()
+        argv.checkArgs()
         await navigateToPage()
         await navigateToLastPage()
         var mailMessage = await bookHours()
